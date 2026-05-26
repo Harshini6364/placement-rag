@@ -1,6 +1,7 @@
 """
 app.py
-Streamlit UI with caching, feedback loop, and sidebar query injection.
+Streamlit UI with caching. Feedback loop and overshadow limiter
+run silently in the background (removed from UI per requirements).
 """
 import os
 import hashlib
@@ -30,13 +31,11 @@ st.set_page_config(
 )
 
 
-# ── Query-level cache (persists across reruns in same session) ────────────────
 @st.cache_data(ttl=3600, show_spinner=False)
 def cached_pipeline_run(query: str, top_k: int, top_rerank: int):
     """
     Cache answers by (query, top_k, top_rerank).
-    Same question = instant reply from cache, no API call.
-    TTL = 1 hour.
+    Same question = instant reply, no API call. TTL = 1 hour.
     """
     pipeline = st.session_state._pipeline
     pipeline.config.top_k_retrieve = top_k
@@ -72,13 +71,13 @@ def load_pipeline():
                 return result
         reranker = PassthroughReranker()
 
-    limiter = OvershadowLimiter()
+    limiter = OvershadowLimiter()        # active in background
     refiner = ContextRefiner(limiter)
     prompt_builder = GroundedPromptBuilder()
     generator = GroqGenerator()
     conflict_detector = PlacementConflictDetector()
     fallback_guard = FallbackGuard()
-    feedback = FeedbackLoop(limiter)
+    feedback = FeedbackLoop(limiter)     # active in background
 
     pipeline = RAGPipeline(
         retriever, reranker, refiner, prompt_builder,
@@ -89,19 +88,19 @@ def load_pipeline():
 
 
 pipeline, limiter, feedback = load_pipeline()
-
-# Store pipeline in session state so cached_pipeline_run can access it
 st.session_state._pipeline = pipeline
 
-# ── Session state init ────────────────────────────────────────────────────────
+# ── Session state ─────────────────────────────────────────────────────────────
 defaults = {
     "history": [],
     "last_response": None,
     "last_record": None,
     "last_query": "",
-    "text_input_value": "",   # drives the text box value
+    "text_input_value": "",
+    "trigger_query": "",
     "cache_hits": 0,
     "total_queries": 0,
+    "seen_keys": set(),
 }
 for k, v in defaults.items():
     if k not in st.session_state:
@@ -112,17 +111,6 @@ with st.sidebar:
     st.header("⚙️ Pipeline Config")
     top_k = st.slider("Top-K retrieve", 5, 30, 20)
     top_rerank = st.slider("Top-K after rerank", 1, 10, 5)
-
-    st.divider()
-    st.header("📊 Overshadow Diagnostics")
-    diag = limiter.get_diagnostics()
-    st.metric("Context cap (chunks)", diag["current_cap"])
-    st.metric("Sweet spot", diag["sweet_spot_range"])
-    st.metric("Overshadow threshold", f"{diag['overshadow_threshold']} tokens")
-    if diag["history"]:
-        risk = diag["history"][-1].get("overshadow_risk", 0)
-        color = "🟢" if risk < 0.3 else "🟡" if risk < 0.6 else "🔴"
-        st.metric("Last risk", f"{color} {risk:.2f}")
 
     st.divider()
     st.header("⚡ Cache Stats")
@@ -138,14 +126,8 @@ with st.sidebar:
         cached_pipeline_run.clear()
         st.session_state.cache_hits = 0
         st.session_state.total_queries = 0
+        st.session_state.seen_keys = set()
         st.toast("Cache cleared!", icon="🗑️")
-
-    st.divider()
-    fb_summary = feedback.summary()
-    st.header("🔄 Feedback Loop")
-    st.metric("Queries rated", fb_summary["rated"])
-    st.metric("Accuracy", f"{fb_summary['accuracy']*100:.0f}%")
-    st.metric("Context cap", fb_summary["current_cap"])
 
     st.divider()
     st.header("💡 Quick Test Queries")
@@ -163,44 +145,36 @@ with st.sidebar:
     ]
     for qq in quick_queries:
         if st.button(qq, use_container_width=True, key=f"quick_{qq[:30]}"):
-            # ← This is the fix: set value AND trigger run
             st.session_state.text_input_value = qq
             st.session_state.trigger_query = qq
             st.rerun()
 
-# ── Main area ─────────────────────────────────────────────────────────────────
+# ── Main ──────────────────────────────────────────────────────────────────────
 st.title("🎓 Placement Intelligence Assistant")
-st.caption("SVECW · RAG-ATHON 24 | Hybrid RAG + Groq + AIMD Overshadow Control")
+st.caption("SVECW · RAG-ATHON 24 | Hybrid RAG + Groq + Vision Chart Support")
 
-# Text box — value is controlled by session state
-# When sidebar button clicked, text_input_value is pre-filled
 query = st.text_input(
     "Ask a placement question:",
     value=st.session_state.text_input_value,
     placeholder="e.g. Which Python-focused company hires the most interns?",
 )
-
-# Sync the text box back to session state as user types
 st.session_state.text_input_value = query
 
 col_ask, col_clear = st.columns([1, 5])
 with col_ask:
     ask_clicked = st.button("🔍 Ask", type="primary", use_container_width=True)
 with col_clear:
-    if st.button("✖ Clear", use_container_width=False):
+    if st.button("✖ Clear"):
         st.session_state.text_input_value = ""
         st.session_state.last_response = None
         st.session_state.last_query = ""
         st.rerun()
 
-# ── Determine if we should run the pipeline ───────────────────────────────────
+# ── Determine query to run ────────────────────────────────────────────────────
 run_query = None
-
 if ask_clicked and query.strip():
     run_query = query.strip()
-
-# Sidebar button triggered a run
-if "trigger_query" in st.session_state and st.session_state.trigger_query:
+if st.session_state.trigger_query:
     run_query = st.session_state.trigger_query
     st.session_state.trigger_query = ""
 
@@ -208,25 +182,23 @@ if "trigger_query" in st.session_state and st.session_state.trigger_query:
 if run_query:
     st.session_state.total_queries += 1
 
-    # Check if this exact query is already cached
     cache_key = hashlib.md5(
         f"{run_query}_{top_k}_{top_rerank}".encode()
     ).hexdigest()
-    already_cached = cache_key in st.session_state.get("seen_keys", set())
-
+    already_cached = cache_key in st.session_state.seen_keys
     if already_cached:
         st.session_state.cache_hits += 1
-
-    # Track seen keys
-    if "seen_keys" not in st.session_state:
-        st.session_state.seen_keys = set()
     st.session_state.seen_keys.add(cache_key)
 
-    spinner_msg = "⚡ Cache hit — instant reply!" if already_cached else "Retrieving → Reranking → Generating..."
-
+    spinner_msg = (
+        "⚡ Returning cached answer..."
+        if already_cached
+        else "Retrieving → Reranking → Generating..."
+    )
     with st.spinner(spinner_msg):
         cached_result = cached_pipeline_run(run_query, top_k, top_rerank)
 
+    # Feedback loop records silently (no UI shown)
     rec = feedback.record(
         run_query,
         cached_result["retrieval_quality"],
@@ -245,9 +217,7 @@ if st.session_state.last_response:
     response = st.session_state.last_response
 
     st.markdown("---")
-
-    # Show the question that was asked
-    st.markdown(f"### 🙋 Your question")
+    st.markdown("### 🙋 Your question")
     st.info(st.session_state.last_query)
 
     st.markdown("### 💬 Answer")
@@ -264,20 +234,9 @@ if st.session_state.last_response:
     else:
         st.success(response["answer"])
 
-    # Feedback buttons
-    col_g, col_b, _ = st.columns([1, 1, 6])
-    with col_g:
-        if st.button("👍 Correct"):
-            feedback.good(st.session_state.last_record)
-            st.toast("Thanks! Context cap +1.", icon="✅")
-    with col_b:
-        if st.button("👎 Wrong"):
-            feedback.bad(st.session_state.last_record)
-            st.toast("Noted. Context cap halved.", icon="⚠️")
-
-    # Diagnostics expander
+    # Retrieval diagnostics (kept, shown on demand)
     with st.expander("📊 Retrieval Diagnostics"):
-        d = limiter.get_diagnostics()
+        d = limiter.get_diagnostics()          # overshadow limiter runs silently
         last_hist = d["history"][-1] if d["history"] else {}
         c1, c2, c3, c4 = st.columns(4)
         c1.metric("Retrieval quality", f"{response['retrieval_quality']:.2f}")
@@ -287,18 +246,18 @@ if st.session_state.last_response:
 
         risk_val = last_hist.get("overshadow_risk", 0)
         if risk_val < 0.3:
-            st.success("🟢 Context in sweet spot — low hallucination risk.")
+            st.success("🟢 Sweet spot — low hallucination risk.")
         elif risk_val < 0.6:
             st.warning("🟡 Moderate risk.")
         else:
-            st.error("🔴 High overshadow risk — rate 👎 to reduce context.")
+            st.error("🔴 High overshadow risk.")
 
     if response["sources"]:
         with st.expander("📚 Sources used"):
             for s in response["sources"]:
                 st.code(s)
 
-# ── Query history ─────────────────────────────────────────────────────────────
+# ── History ───────────────────────────────────────────────────────────────────
 if len(st.session_state.history) > 1:
     with st.expander(f"🕓 History ({len(st.session_state.history)} queries)"):
         for i, (q, r) in enumerate(reversed(st.session_state.history[-10:]), 1):
