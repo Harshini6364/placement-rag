@@ -1,11 +1,14 @@
 """
 app.py
-Streamlit UI with caching. Feedback loop and overshadow limiter
-run silently in the background (removed from UI per requirements).
+Streamlit UI — persistent sidebar history (ChatGPT style),
+response time shown instead of cache labels,
+history preserved across reruns.
 """
 import os
+import time
 import hashlib
 import logging
+import json
 import streamlit as st
 from dotenv import load_dotenv
 load_dotenv()
@@ -30,13 +33,34 @@ st.set_page_config(
     layout="wide",
 )
 
+# ── Persistent storage path ───────────────────────────────────────────────────
+HISTORY_FILE = "data/chat_history.json"
 
+
+def load_history() -> list[dict]:
+    """Load chat history from disk — persists across page reloads."""
+    try:
+        if os.path.exists(HISTORY_FILE):
+            with open(HISTORY_FILE, "r") as f:
+                return json.load(f)
+    except Exception:
+        pass
+    return []
+
+
+def save_history(history: list[dict]):
+    """Save chat history to disk."""
+    try:
+        os.makedirs("data", exist_ok=True)
+        with open(HISTORY_FILE, "w") as f:
+            json.dump(history[-50:], f, indent=2)  # keep last 50
+    except Exception:
+        pass
+
+
+# ── Pipeline loader ───────────────────────────────────────────────────────────
 @st.cache_data(ttl=3600, show_spinner=False)
 def cached_pipeline_run(query: str, top_k: int, top_rerank: int):
-    """
-    Cache answers by (query, top_k, top_rerank).
-    Same question = instant reply, no API call. TTL = 1 hour.
-    """
     pipeline = st.session_state._pipeline
     pipeline.config.top_k_retrieve = top_k
     pipeline.config.top_k_rerank = top_rerank
@@ -59,26 +83,21 @@ def load_pipeline():
         bm25_path=os.getenv("BM25_PATH", "data/bm25_store.pkl"),
     )
     embedder.load()
-
     retriever = HybridRetriever(embedder)
-
     try:
         reranker = CrossEncoderReranker()
     except Exception:
         from core.interfaces import BaseReranker
         class PassthroughReranker(BaseReranker):
-            def rerank(self, query, result):
-                return result
+            def rerank(self, q, r): return r
         reranker = PassthroughReranker()
-
-    limiter = OvershadowLimiter()        # active in background
+    limiter = OvershadowLimiter()
     refiner = ContextRefiner(limiter)
     prompt_builder = GroundedPromptBuilder()
     generator = GroqGenerator()
     conflict_detector = PlacementConflictDetector()
     fallback_guard = FallbackGuard()
-    feedback = FeedbackLoop(limiter)     # active in background
-
+    feedback = FeedbackLoop(limiter)
     pipeline = RAGPipeline(
         retriever, reranker, refiner, prompt_builder,
         generator, conflict_detector, fallback_guard,
@@ -91,46 +110,29 @@ pipeline, limiter, feedback = load_pipeline()
 st.session_state._pipeline = pipeline
 
 # ── Session state ─────────────────────────────────────────────────────────────
-defaults = {
-    "history": [],
-    "last_response": None,
-    "last_record": None,
-    "last_query": "",
-    "text_input_value": "",
-    "trigger_query": "",
-    "cache_hits": 0,
-    "total_queries": 0,
-    "seen_keys": set(),
-}
-for k, v in defaults.items():
-    if k not in st.session_state:
-        st.session_state[k] = v
+if "chat_history" not in st.session_state:
+    st.session_state.chat_history = load_history()   # load from disk on first run
+if "text_input_value" not in st.session_state:
+    st.session_state.text_input_value = ""
+if "trigger_query" not in st.session_state:
+    st.session_state.trigger_query = ""
+if "seen_keys" not in st.session_state:
+    st.session_state.seen_keys = set()
+if "active_index" not in st.session_state:
+    st.session_state.active_index = None   # which history item is shown in main area
 
 # ── Sidebar ───────────────────────────────────────────────────────────────────
 with st.sidebar:
-    st.header("⚙️ Pipeline Config")
-    top_k = st.slider("Top-K retrieve", 5, 30, 20)
-    top_rerank = st.slider("Top-K after rerank", 1, 10, 5)
+    st.markdown("## 🎓 Placement RAG")
+    st.caption("SVECW · RAG-ATHON 24")
 
     st.divider()
-    st.header("⚡ Cache Stats")
-    total = st.session_state.total_queries
-    hits = st.session_state.cache_hits
-    misses = total - hits
-    st.metric("Total queries", total)
-    st.metric("Cache hits ⚡", hits)
-    st.metric("API calls made", misses)
-    if total > 0:
-        st.progress(hits / total, text=f"Hit rate: {hits/total*100:.0f}%")
-    if st.button("🗑️ Clear cache", use_container_width=True):
-        cached_pipeline_run.clear()
-        st.session_state.cache_hits = 0
-        st.session_state.total_queries = 0
-        st.session_state.seen_keys = set()
-        st.toast("Cache cleared!", icon="🗑️")
+    st.markdown("### ⚙️ Config")
+    top_k = st.slider("Retrieve top-K", 5, 30, 20)
+    top_rerank = st.slider("Rerank top-K", 1, 10, 5)
 
     st.divider()
-    st.header("💡 Quick Test Queries")
+    st.markdown("### 💡 Quick Queries")
     quick_queries = [
         "What is the CGPA requirement for Google?",
         "Which companies are bond-free with package > 40 LPA?",
@@ -142,21 +144,77 @@ with st.sidebar:
         "I have CGPA 5.0. Where can I apply?",
         "Which Python-focused company hires the most Interns?",
         "Compare Google and Amazon on all dimensions.",
+        "Which company grew the most from 2021 to 2024?",
+        "List all companies that allow at least 2 backlogs.",
     ]
     for qq in quick_queries:
-        if st.button(qq, use_container_width=True, key=f"quick_{qq[:30]}"):
+        if st.button(qq, use_container_width=True, key=f"q_{qq[:25]}"):
             st.session_state.text_input_value = qq
             st.session_state.trigger_query = qq
             st.rerun()
 
-# ── Main ──────────────────────────────────────────────────────────────────────
-st.title("🎓 Placement Intelligence Assistant")
-st.caption("SVECW · RAG-ATHON 24 | Hybrid RAG + Groq + Vision Chart Support")
+    st.divider()
 
+    # ── Chat history (ChatGPT style) ──────────────────────────────────────────
+    history = st.session_state.chat_history
+    if history:
+        st.markdown("### 🕓 History")
+
+        col_clear, col_export = st.columns(2)
+        with col_clear:
+            if st.button("🗑 Clear all", use_container_width=True):
+                st.session_state.chat_history = []
+                st.session_state.active_index = None
+                save_history([])
+                st.rerun()
+        with col_export:
+            export_text = "\n\n".join(
+                f"Q: {h['query']}\nA: {h['answer']}\nTime: {h['response_time']}s"
+                for h in history
+            )
+            st.download_button(
+                "⬇ Export",
+                export_text,
+                file_name="placement_rag_history.txt",
+                use_container_width=True,
+            )
+
+        st.markdown("")
+
+        # Show each history item as a clickable button
+        for i, item in enumerate(reversed(history)):
+            idx = len(history) - 1 - i   # actual index in list
+            is_active = (st.session_state.active_index == idx)
+
+            # Truncate query for display
+            display_q = item["query"][:42] + "..." if len(item["query"]) > 42 else item["query"]
+            response_time = item.get("response_time", "?")
+
+            # Highlight active item
+            label = f"{'▶ ' if is_active else ''}{display_q}"
+            if st.button(
+                label,
+                key=f"hist_{idx}",
+                use_container_width=True,
+                help=f"Response time: {response_time}s | Click to view",
+            ):
+                st.session_state.active_index = idx
+                st.rerun()
+
+            # Show response time below each entry
+            st.caption(f"⏱ {response_time}s")
+    else:
+        st.caption("No history yet. Ask a question to get started.")
+
+# ── Main area ─────────────────────────────────────────────────────────────────
+st.title("🎓 Placement Intelligence Assistant")
+st.caption("SVECW · RAG-ATHON 24 | Hybrid RAG + Groq + Vision + Temporal Reasoning")
+
+# Text input
 query = st.text_input(
     "Ask a placement question:",
     value=st.session_state.text_input_value,
-    placeholder="e.g. Which Python-focused company hires the most interns?",
+    placeholder="e.g. Which company grew the most from 2021 to 2024?",
 )
 st.session_state.text_input_value = query
 
@@ -166,8 +224,7 @@ with col_ask:
 with col_clear:
     if st.button("✖ Clear"):
         st.session_state.text_input_value = ""
-        st.session_state.last_response = None
-        st.session_state.last_query = ""
+        st.session_state.active_index = None
         st.rerun()
 
 # ── Determine query to run ────────────────────────────────────────────────────
@@ -180,89 +237,91 @@ if st.session_state.trigger_query:
 
 # ── Run pipeline ──────────────────────────────────────────────────────────────
 if run_query:
-    st.session_state.total_queries += 1
-
     cache_key = hashlib.md5(
         f"{run_query}_{top_k}_{top_rerank}".encode()
     ).hexdigest()
-    already_cached = cache_key in st.session_state.seen_keys
-    if already_cached:
-        st.session_state.cache_hits += 1
+    is_cached = cache_key in st.session_state.seen_keys
     st.session_state.seen_keys.add(cache_key)
 
-    spinner_msg = (
-        "⚡ Returning cached answer..."
-        if already_cached
-        else "Retrieving → Reranking → Generating..."
-    )
-    with st.spinner(spinner_msg):
-        cached_result = cached_pipeline_run(run_query, top_k, top_rerank)
+    start_time = time.time()
+    with st.spinner("Thinking..."):
+        result = cached_pipeline_run(run_query, top_k, top_rerank)
+    elapsed = round(time.time() - start_time, 2)
 
-    # Feedback loop records silently (no UI shown)
-    rec = feedback.record(
-        run_query,
-        cached_result["retrieval_quality"],
-        cached_result["context_tokens"],
-        limiter.get_diagnostics()["history"][-1].get("overshadow_risk", 0)
-        if limiter.get_diagnostics()["history"] else 0,
-    )
+    # Save to history
+    history_item = {
+        "query": run_query,
+        "answer": result["answer"],
+        "sources": result["sources"],
+        "conflicts_detected": result["conflicts_detected"],
+        "fallback_triggered": result["fallback_triggered"],
+        "retrieval_quality": result["retrieval_quality"],
+        "context_tokens": result["context_tokens"],
+        "self_consistency_score": result["self_consistency_score"],
+        "response_time": elapsed,   # actual wall time — cached hits show ~0.0s
+    }
+    st.session_state.chat_history.append(history_item)
+    save_history(st.session_state.chat_history)
 
-    st.session_state.last_response = cached_result
-    st.session_state.last_record = rec
-    st.session_state.last_query = run_query
-    st.session_state.history.append((run_query, cached_result))
+    # Point active view to this new item
+    st.session_state.active_index = len(st.session_state.chat_history) - 1
+    st.session_state.text_input_value = ""
+    st.rerun()
 
-# ── Display answer ────────────────────────────────────────────────────────────
-if st.session_state.last_response:
-    response = st.session_state.last_response
+# ── Display: all history in main area (newest at top) ────────────────────────
+history = st.session_state.chat_history
 
-    st.markdown("---")
-    st.markdown("### 🙋 Your question")
-    st.info(st.session_state.last_query)
+if not history:
+    st.info("Ask a question above or click a quick query from the sidebar.")
+else:
+    # If a sidebar history item was clicked, show only that one highlighted
+    active_idx = st.session_state.active_index
 
-    st.markdown("### 💬 Answer")
+    # Always show ALL questions — newest first
+    for i, item in enumerate(reversed(history)):
+        idx = len(history) - 1 - i
+        is_active = (active_idx == idx)
 
-    if response["fallback_triggered"]:
-        st.warning(
-            "⚠️ **Out-of-corpus** — this information is not in the placement documents.\n\n"
-            + response["answer"]
-        )
-    elif response["conflicts_detected"]:
-        for conflict in response["conflicts_detected"]:
-            st.error(conflict)
-        st.markdown(response["answer"])
-    else:
-        st.success(response["answer"])
+        # Container with border highlight for active item
+        with st.container(border=True):
+            # Header row: question + response time
+            col_q, col_t = st.columns([5, 1])
+            with col_q:
+                st.markdown(f"**🙋 Q: {item['query']}**")
+            with col_t:
+                rt = item.get("response_time", "?")
+                # Response time naturally shows cache effect:
+                # first time = 1-3s, repeated = ~0.0s
+                if isinstance(rt, float) and rt < 0.1:
+                    st.markdown(f"**⚡ {rt}s**")
+                else:
+                    st.markdown(f"⏱ {rt}s")
 
-    # Retrieval diagnostics (kept, shown on demand)
-    with st.expander("📊 Retrieval Diagnostics"):
-        d = limiter.get_diagnostics()          # overshadow limiter runs silently
-        last_hist = d["history"][-1] if d["history"] else {}
-        c1, c2, c3, c4 = st.columns(4)
-        c1.metric("Retrieval quality", f"{response['retrieval_quality']:.2f}")
-        c2.metric("Context tokens", response["context_tokens"])
-        c3.metric("Overshadow risk", f"{last_hist.get('overshadow_risk', 0):.2f}")
-        c4.metric("Consistency", f"{response['self_consistency_score']:.2f}")
+            # Answer
+            if item["fallback_triggered"]:
+                st.warning(
+                    "⚠️ Out-of-corpus — not in placement documents.\n\n"
+                    + item["answer"]
+                )
+            elif item["conflicts_detected"]:
+                for conflict in item["conflicts_detected"]:
+                    st.error(conflict)
+                st.markdown(item["answer"])
+            else:
+                st.success(item["answer"])
 
-        risk_val = last_hist.get("overshadow_risk", 0)
-        if risk_val < 0.3:
-            st.success("🟢 Sweet spot — low hallucination risk.")
-        elif risk_val < 0.6:
-            st.warning("🟡 Moderate risk.")
-        else:
-            st.error("🔴 High overshadow risk.")
+            # Diagnostics (collapsed by default)
+            with st.expander("📊 Diagnostics", expanded=False):
+                c1, c2, c3 = st.columns(3)
+                c1.metric("Retrieval quality", f"{item['retrieval_quality']:.2f}")
+                c2.metric("Context tokens", item["context_tokens"])
+                c3.metric("Consistency", f"{item['self_consistency_score']:.2f}")
 
-    if response["sources"]:
-        with st.expander("📚 Sources used"):
-            for s in response["sources"]:
-                st.code(s)
+            if item["sources"]:
+                with st.expander("📚 Sources", expanded=False):
+                    for s in item["sources"]:
+                        st.code(s)
 
-# ── History ───────────────────────────────────────────────────────────────────
-if len(st.session_state.history) > 1:
-    with st.expander(f"🕓 History ({len(st.session_state.history)} queries)"):
-        for i, (q, r) in enumerate(reversed(st.session_state.history[-10:]), 1):
-            cached_tag = "⚡" if i > 1 else ""
-            st.markdown(f"**Q{i} {cached_tag}:** {q}")
-            ans = r["answer"] if isinstance(r, dict) else r.answer
-            st.markdown(f"↳ {ans[:150]}...")
-            st.divider()
+        # Divider between items
+        if i < len(history) - 1:
+            st.markdown("")

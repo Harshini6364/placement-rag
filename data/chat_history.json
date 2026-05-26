@@ -1,0 +1,57 @@
+[
+  {
+    "query": "What is the CGPA requirement for Google?",
+    "answer": "To answer the question, we need to follow the steps for a MULTI-HOP ELIGIBILITY query.\n\n**Step 1: Filter companies where min_cgpa <= student_cgpa**\nSince the question doesn't specify a student's CGPA, we'll assume a hypothetical student CGPA of 7.4 (to match the Google CGPA requirement in Chunk 1).\n\nWe'll scan the eligibility chunks for companies with a minimum CGPA requirement less than or equal to 7.4.\n\n- Google (Chunk 1): min_cgpa = 7.4 (matches)\n- Amazon (Chunk 4): min_cgpa = 6.4 (matches)\n- Microsoft (Chunk 5): min_cgpa = 6.1 (matches)\n\n**Step 2: Filter where max_backlogs >= student_backlogs**\nSince the question doesn't specify a student's backlogs, we'll assume a hypothetical student with 0 backlogs (to maximize eligibility).\n\nWe'll filter the companies from Step 1 where the maximum backlogs allowed is greater than or equal to 0.\n\n- Google (Chunk 1): max_backlogs = 0 (matches)\n- Amazon (Chunk 4): max_backlogs = 1 (does not match)\n- Microsoft (Chunk 5): max_backlogs = 1 (does not match)\n\n**Step 3: Sort remaining by package descending**\nWe'll sort the remaining companies from Step 2 by package in descending order.\n\n- Google (Chunk 1): package = 42.0 LPA\n- Since only one company remains, we don't need to compare further.\n\n**Final Answer:**\nThe CGPA requirement for Google is 7.4.",
+    "sources": [
+      "ELIGIBILITY | Google",
+      "CONFLICT | Google | CONFLICT",
+      "CONFLICT | Google | CONFLICT",
+      "ELIGIBILITY | Amazon",
+      "ELIGIBILITY | Microsoft"
+    ],
+    "conflicts_detected": [
+      "\u26a0\ufe0f Conflicting data detected for Google: official and portal sources disagree. Please verify with the official placement cell."
+    ],
+    "fallback_triggered": false,
+    "retrieval_quality": 0.7244218349456787,
+    "context_tokens": 387,
+    "self_consistency_score": 1.0,
+    "response_time": 6.98
+  },
+  {
+    "query": "Which companies are bond-free with package > 40 LPA?",
+    "answer": "To find the companies that are bond-free with a package > 40 LPA, I will follow these steps:\n\nStep 1: Filter by bond-free condition\n- Intel: Bond-free: Yes\n- IBM: Bond-free: Yes\n- Accenture: Bond-free: No\n- SAP: Bond-free: No\n- Qualcomm: Bond-free: No\n\nStep 2: Filter by package condition (package > 40 LPA)\n- Intel: Package offered: 41.4 LPA\n- IBM: Package offered: 27.5 LPA (does not meet the condition)\n- Accenture: Package offered: 17.3 LPA (does not meet the condition)\n- SAP: Package offered: 20.7 LPA (does not meet the condition)\n- Qualcomm: Package offered: 41.3 LPA\n\nStep 3: Combine the results from Step 1 and Step 2\n- Intel: Bond-free: Yes, Package > 40 LPA: Yes\n- Qualcomm: Bond-free: No, Package > 40 LPA: Yes (does not meet the bond-free condition)\n\nThe final answer is: Intel.",
+    "sources": [
+      "ELIGIBILITY | Qualcomm",
+      "ELIGIBILITY | Intel",
+      "ELIGIBILITY | IBM",
+      "ELIGIBILITY | Accenture",
+      "ELIGIBILITY | SAP"
+    ],
+    "conflicts_detected": [],
+    "fallback_triggered": false,
+    "retrieval_quality": 0.6108584880828858,
+    "context_tokens": 381,
+    "self_consistency_score": 1.0,
+    "response_time": 2.34
+  },
+  {
+    "query": "What is the CGPA requirement for Google?",
+    "answer": "To answer the question, we need to follow the steps for a MULTI-HOP ELIGIBILITY query.\n\n**Step 1: Filter companies where min_cgpa <= student_cgpa**\nSince the question doesn't specify a student's CGPA, we'll assume a hypothetical student CGPA of 7.4 (to match the Google CGPA requirement in Chunk 1).\n\nWe'll scan the eligibility chunks for companies with a minimum CGPA requirement less than or equal to 7.4.\n\n- Google (Chunk 1): min_cgpa = 7.4 (matches)\n- Amazon (Chunk 4): min_cgpa = 6.4 (matches)\n- Microsoft (Chunk 5): min_cgpa = 6.1 (matches)\n\n**Step 2: Filter where max_backlogs >= student_backlogs**\nSince the question doesn't specify a student's backlogs, we'll assume a hypothetical student with 0 backlogs (to maximize eligibility).\n\nWe'll filter the companies from Step 1 where the maximum backlogs allowed is greater than or equal to 0.\n\n- Google (Chunk 1): max_backlogs = 0 (matches)\n- Amazon (Chunk 4): max_backlogs = 1 (does not match)\n- Microsoft (Chunk 5): max_backlogs = 1 (does not match)\n\n**Step 3: Sort remaining by package descending**\nWe'll sort the remaining companies from Step 2 by package in descending order.\n\n- Google (Chunk 1): package = 42.0 LPA\n- Since only one company remains, we don't need to compare further.\n\n**Final Answer:**\nThe CGPA requirement for Google is 7.4.",
+    "sources": [
+      "ELIGIBILITY | Google",
+      "CONFLICT | Google | CONFLICT",
+      "CONFLICT | Google | CONFLICT",
+      "ELIGIBILITY | Amazon",
+      "ELIGIBILITY | Microsoft"
+    ],
+    "conflicts_detected": [
+      "\u26a0\ufe0f Conflicting data detected for Google: official and portal sources disagree. Please verify with the official placement cell."
+    ],
+    "fallback_triggered": false,
+    "retrieval_quality": 0.7244218349456787,
+    "context_tokens": 387,
+    "self_consistency_score": 1.0,
+    "response_time": 0.0
+  }
+]

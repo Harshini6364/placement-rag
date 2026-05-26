@@ -35,7 +35,7 @@ EVAL_QUERIES = [
     # Expert (fallback)
     {"id": "X1", "query": "What is TCS's campus visit date at SVECW?", "difficulty": "Expert", "expected_fallback": True},
     {"id": "X2", "query": "Should I join Google or Microsoft? Which is better for my career?", "difficulty": "Expert", "expected_fallback": True},
-    {"id": "X3", "query": "I have CGPA 5.0. Where can I apply?", "difficulty": "Expert", "expected_keywords": ["no company", "below", "5.0"]},
+    {"id": "X3", "query": "I have CGPA 5.0. Where can I apply?", "difficulty": "Expert", "expected_keywords": ["no company", "5.0", "cutoff"]},
     {"id": "X4", "query": "What is Infosys's current stock price?", "difficulty": "Expert", "expected_fallback": True},
-    {"id": "X5", "query": "Which company in this dataset pays the highest in the world?", "difficulty": "Expert", "expected_keywords": ["scope", "listed", "Infosys"]},
+    {"id": "X5", "query": "Which company in this dataset pays the highest in the world?", "difficulty": "Expert", "expected_fallback": True},
 ]
