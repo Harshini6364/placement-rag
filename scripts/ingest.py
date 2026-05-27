@@ -1,7 +1,6 @@
 """
 scripts/ingest.py
 Run once to parse, chunk, deduplicate, and index the PDF.
-Parsed sections are passed to chunker so vision descriptions are indexed.
 """
 import os
 import sys
@@ -10,6 +9,9 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")
 
 from dotenv import load_dotenv
 load_dotenv()
+
+from version import print_banner
+print_banner()
 
 from ingestion.parser import DoclingParser
 from ingestion.chunker import PlacementChunker
@@ -28,33 +30,30 @@ PDF_PATH = "data/Placement_RAG_Dataset_Enhanced.pdf"
 def main():
     logger.info("=== INGESTION PIPELINE START ===")
 
-    # Stage 0a: Parse (includes vision chart extraction)
-    parser = DoclingParser(enable_vision=True)
+    parser   = DoclingParser(enable_vision=True)
     sections = parser.parse(PDF_PATH)
-    logger.info(f"Parsed {len(sections)} sections "
-                f"({sum(1 for s in sections if s.get('source') == 'vision')} vision)")
+    logger.info(
+        f"Parsed {len(sections)} sections "
+        f"({sum(1 for s in sections if s.get('source') == 'vision')} vision)"
+    )
 
-    # Stage 0b: Chunk — pass sections so vision chunks are included
     chunker = PlacementChunker()
-    chunks = chunker.chunk(sections)
+    chunks  = chunker.chunk(sections)
     logger.info(f"Created {len(chunks)} chunks")
 
-    # Stage 0c: Deduplicate
     deduper = TFIDFDeduplicator(threshold=0.85)
-    chunks = deduper.deduplicate(chunks)
+    chunks  = deduper.deduplicate(chunks)
     logger.info(f"After dedup: {len(chunks)} chunks")
 
-    # Log chunk breakdown
     from collections import Counter
     section_counts = Counter(c.section for c in chunks)
     logger.info(f"Chunk breakdown: {dict(section_counts)}")
 
-    # Stage 0d: Embed + Index
     embedder = HybridEmbedder(
-        model_name=os.getenv("EMBED_MODEL", "all-MiniLM-L6-v2"),
-        faiss_path=os.getenv("FAISS_INDEX_PATH", "data/faiss_index"),
-        bm25_path=os.getenv("BM25_PATH", "data/bm25_store.pkl"),
-        chunks_path=os.getenv("CHUNKS_PATH", "data/chunks.pkl"),
+        model_name  =os.getenv("EMBED_MODEL",        "all-MiniLM-L6-v2"),
+        faiss_path  =os.getenv("FAISS_INDEX_PATH",   "data/faiss_index"),
+        bm25_path   =os.getenv("BM25_PATH",          "data/bm25_store.pkl"),
+        chunks_path =os.getenv("CHUNKS_PATH",        "data/chunks.pkl"),
     )
     embedder.build_index(chunks)
 

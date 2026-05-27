@@ -5,7 +5,9 @@ venv/
 data/faiss_index
 data/bm25_store.pkl
 data/chunks.pkl
-data/eval_results.csv
+data/multihop_results.csv
+data/chat_history.json
+data/Placement_RAG_Dataset_Enhanced.pdf
 
 # Secrets
 .env
