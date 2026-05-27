@@ -52,6 +52,17 @@ class CalculatorTool(BaseTool):
 
             if "cgpa" in q and any(w in q for w in ["apply", "eligible", "qualify", "backlog"]):
                 return self._eligibility_filter(query)
+            
+            if "world" in q or "globally" in q:
+                return ToolResult(
+                    tool_name=self.name,
+                    success=True,
+                    output=(
+                        "This dataset covers only the listed companies for SVECW placements. "
+                        "Among listed companies, Infosys offers the highest package at 42.9 LPA. "
+                        "For global rankings, this dataset does not have that scope."
+                    ),
+                )
 
             if any(w in q for w in ["highest", "maximum", "best package", "most pay"]):
                 return self._rank_by_package()

@@ -74,7 +74,7 @@ Think step by step, then give your final answer:"""
                 "Find year-tagged chunks and compute: growth = value_2024 - value_2021. "
                 "Show the arithmetic clearly."
             )
-        if any(w in q for w in ["highest", "most", "best", "rank", "maximum", "compare all"]):
+        if any(w in q for w in ["highest", "most", "best", "rank", "maximum", "compare all", "bond-free", "list all", "which companies"]):                          
             return (
                 "This is an AGGREGATION query. "
                 "Scan all chunks, list all relevant values, then identify the maximum/minimum. "

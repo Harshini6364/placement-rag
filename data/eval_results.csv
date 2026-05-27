@@ -1,0 +1,225 @@
+id,difficulty,skill,query,answer,keyword_score,fallback_correct,retrieval_quality,conflicts,context_tokens,latency_s,consistency,tool_used
+E1,Easy,Direct table lookup,What is the CGPA requirement for TCS?,"To answer the question, we need to follow the steps for a MULTI-HOP ELIGIBILITY query.
+
+**Step 1: Filter companies where min_cgpa <= student_cgpa**
+Since the student's CGPA is not provided, we will assume a hypothetical CGPA of 7.5 for this example.
+
+From the context, we have the following companies",1.0,True,0.747,2,388,11.01,1.0,False
+E2,Easy,Direct table lookup,How many backlogs does Deloitte allow?,"To answer this question, I will follow the MULTI-HOP ELIGIBILITY query steps.
+
+**Step 1: Filter companies where min_cgpa <= student_cgpa**
+Since the student's CGPA is not provided, I will assume a hypothetical CGPA of 7.7 (minimum required by Deloitte) for this step. However, since the actual CGPA i",1.0,True,0.711,0,265,2.61,1.0,False
+E3,Easy,Direct table lookup,What is the bond period for Amazon?,"To find the bond period for Amazon, I will look at the provided context chunk:
+
+Chunk 1 [ELIGIBILITY | Amazon]:
+Company: Amazon. Minimum CGPA required: 6.4. Maximum backlogs allowed: 1. Package offered: 28.6 LPA. Bond period: 2 years. Bond-free: No. Key interview topics: DSA, C++, LLD. Technical foc",1.0,True,0.556,0,243,1.08,1.0,False
+E4,Easy,Direct table lookup,Which technology does Flipkart focus on in interviews?,"To answer the question, I will refer to the provided context chunk.
+
+The context chunk mentions: ""Technical focus area: Python.""
+
+Therefore, the final answer is: Python.",1.0,True,0.501,0,243,3.05,1.0,False
+E5,Easy,Direct table lookup,What is the package offered by Google?,"To find the package offered by Google, I will refer to the provided context.
+
+From Chunk 1 [ELIGIBILITY | Google], I see that the package offered by Google is 42.0 LPA.
+
+Therefore, the package offered by Google is 42.0 LPA.",1.0,True,0.395,0,352,2.39,1.0,False
+E6,Easy,Boolean table query,Does Microsoft allow backlogs?,"To answer this question, I will follow the MULTI-HOP ELIGIBILITY query steps.
+
+**Step 1: Filter companies where min_cgpa <= student_cgpa**
+Since the student's CGPA is not provided, I will assume a general case where the student's CGPA is 7.5 (a value that satisfies the condition for at least one com",1.0,True,0.73,0,297,1.29,1.0,False
+E7,Easy,Text retrieval,What rounds does TCS conduct?,"To find the rounds conducted by TCS, I will analyze the provided context chunks.
+
+Chunk 1 mentions Round 3 - Managerial and HR, 
+Chunk 2 mentions Round 2 - Technical Interview, 
+Chunk 3 mentions Round 1 - Online Assessment.
+
+Therefore, TCS conducts 3 rounds.",1.0,True,0.495,0,291,2.12,1.0,False
+E8,Easy,Text retrieval,Which programming language is tested at Amazon?,I don't have enough information in the provided documents to answer this. I don't have enough information in the provided documents to answer this.,0.0,False,0.0,2,208,1.19,1.0,False
+M1,Medium,Multi-row filter,List all companies that allow at least 2 backlogs.,"To answer this question, I will scan all the chunks and list the relevant values.
+
+**Comparison Table:**
+
+| Company | Maximum Backlogs Allowed |
+| --- | --- |
+| IBM | 2 |
+| Qualcomm | 2 |
+| Flipkart | 2 |
+
+From the comparison table, we can see that all three companies (IBM, Qualcomm, and Flipkart) a",0.75,True,0.587,0,397,7.59,1.0,False
+M2,Medium,Threshold filter,Which companies require a CGPA above 8.0?,Generation failed.,0.0,True,0.716,0,395,8.89,1.0,False
+M3,Medium,Category + sort,Which company has the highest package among IT service firms?,"I don't have enough information in the provided documents to answer this. Since there are no chunks provided, I will wait for the context to be populated before answering the question.
+
+However, I can guide you through the process of how I would approach this question once the context is available.
+",0.0,False,0.0,0,227,3.96,1.0,False
+M4,Medium,Boolean filter,Which companies are bond-free?,"To answer this question, I will scan all the chunks and list the relevant values.
+
+**Comparison Table:**
+
+| Company | Bond-free |
+| --- | --- |
+| Qualcomm | No |
+| IBM | Yes |
+| Intel | Yes |
+| Accenture | No |
+| Deloitte | No |
+
+**Reasoning:**
+Based on the comparison table, I can see that there are",0.4,True,0.676,0,393,2.44,1.0,False
+M5,Medium,Multi-attribute comparison,Compare TCS and Infosys on all eligibility criteria.,"I don't have enough information in the provided documents to answer this. To compare TCS and Infosys on all eligibility criteria, we need to retrieve the relevant context chunks. However, there are no context chunks provided yet. 
+
+Let's wait for the context to be retrieved.",0.5,False,0.0,3,209,4.73,1.0,False
+M6,Medium,Chart/table comparison,How many SDE roles does Amazon hire versus Google?,"To find the difference in SDE roles between Amazon and Google, I will compare the values from the context.
+
+Chunk 1 [HIRING | Google]: SDE roles: 30
+Chunk 2 [HIRING | Amazon]: SDE roles: 42
+
+Amazon hires 42 SDE roles, and Google hires 30 SDE roles. 
+
+To find the difference, I will subtract the numbe",1.0,True,0.722,0,370,7.33,1.0,False
+M7,Medium,Hiring table aggregation,Which company hires the most Interns?,"To answer this question, I will follow the AGGREGATION instruction.
+
+**Step 1: Scan all relevant chunks for Intern positions**
+
+Chunk 1: Microsoft - Intern positions: 68
+Chunk 2: Oracle - Intern positions: 95
+Chunk 3: Amazon - Intern positions: 82
+Chunk 4: Accenture - Intern positions: 68
+Chunk 5: I",1.0,True,0.673,0,383,7.06,1.0,False
+M8,Medium,Text retrieval + synthesis,What topics should I prepare for a Microsoft interview?,"To determine the topics to prepare for a Microsoft interview, let's analyze the provided context:
+
+- **Round 1: Online Assessment** - 3 DSA (Data Structures and Algorithms) problems of medium difficulty.
+- **Round 2: Technical Interview 1** - Data Structures covering Trees and Graphs, problem-solvin",1.0,True,0.339,0,315,8.51,1.0,False
+M9,Medium,Temporal reasoning,Which company's package grew the most from 2021 to 2024?,"To find the company with the highest growth, we need to calculate the growth for each company from 2021 to 2024.
+
+From Chunk 1 [TREND | Microsoft]:
+- Value in 2021: 19.0 LPA
+- Value in 2024: 21.4 LPA
+- Growth = 21.4 - 19.0 = +2.4 LPA
+
+From Chunk 2 [TREND | Accenture]:
+- Value in 2021: 14.0 LPA
+- Val",1.0,True,0.766,0,367,9.61,1.0,False
+M10,Medium,Column filter,Which companies use Python as the technical focus?,"To answer this question, I will scan all the chunks and list the relevant values.
+
+**Comparison Table:**
+
+| Company | Technical Focus Area |
+| --- | --- |
+| Intel | Python |
+| Flipkart | Python |
+| Oracle | Python |
+| Google | Python |
+
+From the comparison table, it is clear that all four companies ",1.0,True,0.529,0,361,12.12,1.0,False
+H1,Hard,3-condition filter,"A student with CGPA 7.0, 1 backlog wants maximum pay with no bond.","Eligible companies for CGPA 7.0, 1 backlogs (ranked by package):
+1. Amazon: 28.6 LPA (min CGPA 6.4, bond 2yr)
+2. Wipro: 26.1 LPA (min CGPA 6.7, bond 1yr)
+3. Microsoft: 21.4 LPA (min CGPA 6.1, bond 0yr)
+4. Samsung R&D: 7.6 LPA (min CGPA 6.3, bond 2yr)
+
+Additional context from placement documents:
+To ",1.0,True,0.53,0,403,9.65,1.0,True
+H2,Hard,Join: tech + hiring,Which Python-focused company hires the most Interns?,"To answer this question, I will follow the AGGREGATION rules.
+
+**Step 1: Scan all relevant chunks for Intern positions**
+
+Chunk 1: Oracle - Intern positions: 95
+Chunk 2: Microsoft - Intern positions: 68
+Chunk 3: Infosys - Intern positions: 22
+Chunk 4: Accenture - Intern positions: 68
+Chunk 5: Amazon",1.0,True,0.111,0,384,10.19,1.0,False
+H3,Hard,Filter + sort,"For CGPA 8.0+, zero backlog students, rank companies by package.","Eligible companies for CGPA 8.0, 0 backlogs (ranked by package):
+1. Infosys: 42.9 LPA (min CGPA 8.0, bond 0yr)
+2. Google: 42.0 LPA (min CGPA 7.4, bond 1yr)
+3. Intel: 41.4 LPA (min CGPA 7.0, bond 0yr)
+4. Qualcomm: 41.3 LPA (min CGPA 7.2, bond 1yr)
+5. Capgemini: 38.3 LPA (min CGPA 7.1, bond 2yr)
+6. Am",1.0,True,0.536,0,398,9.7,1.0,True
+H4,Hard,Conflict detection,Which company had conflicting CGPA data across sources?,"To answer this question, I will follow the instructions and perform the multi-hop eligibility query.
+
+**Step 1: Filter companies where min_cgpa <= student_cgpa**
+
+Assuming the student's CGPA is 7.5, I will filter the companies based on the minimum CGPA required.
+
+- IBM: min_cgpa = 7.5 (matches)
+- De",0.0,True,0.108,0,405,11.71,1.0,False
+H5,Hard,Conflict resolution,Is the Amazon CGPA cutoff 6.4 or 7.0? Explain.,"To answer the question, we need to follow the instructions for a MULTI-HOP ELIGIBILITY query.
+
+However, since the question is about the Amazon CGPA cutoff, we can directly address it without going through the entire eligibility process.
+
+Step 1: Filter companies where min_cgpa <= student_cgpa. 
+Sinc",1.0,True,0.65,2,387,9.44,1.0,False
+H6,Hard,Computed aggregation,Which company offers the best package-to-CGPA ratio?,"Top 5 package-to-CGPA ratio:
+1. Intel: 5.914 LPA/CGPA
+2. Qualcomm: 5.736 LPA/CGPA
+3. Google: 5.676 LPA/CGPA
+4. Capgemini: 5.394 LPA/CGPA
+5. Infosys: 5.362 LPA/CGPA
+
+Additional context from placement documents:
+To find the company with the best package-to-CGPA ratio, we need to calculate the ratio fo",0.5,True,0.51,0,396,13.7,1.0,True
+H7,Hard,Full synthesis,"Compare Google and Amazon on all dimensions: eligibility, package, hiring, trend.","To compare Google and Amazon on all dimensions, we need to analyze the provided chunks.
+
+**Eligibility:**
+Since there's no information about eligibility criteria in the provided chunks, I don't have enough information in the provided documents to answer this.
+
+**Package:**
+We can compare the package",1.0,True,0.045,0,281,9.01,1.0,False
+X1,Expert,Out-of-corpus fallback,What is TCS's campus visit date at SVECW?,"- Hearty Congratulations to TCS (TATA Consultancy Services) Selected ...: 14 Sept 2019 · Please be informed that TCS will be visiting Netaji Subhash Engineering College for Campus Recruitment of 2014 pass out batch(final year) as ...
+- TCS vs Cognizant — don't wanna fumble this decision - Reddit: 26",1.0,False,1.0,0,114,3.39,1.0,False
+X2,Expert,Opinion / subjective,Should I join Google or Microsoft? Which is better for my career?,"Google: 42.0 LPA | min CGPA 7.4 | bond 1yr | focus Python/Algorithms
+Microsoft: 21.4 LPA | min CGPA 6.1 | bond None | focus C++/OS/DBMS
+
+Objective summary: Google pays more (42 vs 21.4 LPA) but has stricter algorithmic interviews. Microsoft has no bond and lower CGPA cutoff. Choice depends on your p",0.67,True,0.0,0,213,2.68,1.0,True
+X3,Expert,Below-threshold edge case,I have CGPA 5.0. Where can I apply?,"No companies found for CGPA 5.0 with 0 backlogs.
+
+Additional context from placement documents:
+I don't have enough information in the provided documents to answer this. To answer your query, I will follow the MULTI-HOP ELIGIBILITY steps.
+
+**Step 1: Filter companies where min_cgpa <= student_cgpa**
+
+",0.0,True,0.0,2,232,4.78,1.0,True
+X4,Expert,Real-time out-of-corpus,What is Infosys's current stock price?,"- Infosys Share Price Today, Infosys Stock Price Live NSE/BSE Updates ...: Infosys Share Price Today - Get live NSE/BSE quotes of Infosys with latest news, headlines and quick analysis. View forecasts, quarterly results, dividend details, balance sheet & more.··
+- Infosys Share Price, Infosys Stock ",1.0,False,1.0,0,126,4.33,1.0,False
+X5,Expert,Scope boundary handling,Which company in this dataset pays the highest in the world?,"This dataset covers only the listed companies for SVECW placements. Among listed companies, Infosys offers the highest package at 42.9 LPA. For global rankings, this dataset does not have that scope.
+
+Additional context from placement documents:
+I don't have enough information in the provided docume",1.0,True,0.0,0,228,3.8,1.0,True
+MH1,Multi-hop,Hop-2: Eligibility + Package,A student with CGPA 7.6 and 1 backlog wants the highest paying job they qualify for.,"Eligible companies for CGPA 7.6, 1 backlogs (ranked by package):
+1. Qualcomm: 41.3 LPA (min CGPA 7.2, bond 1yr)
+2. Amazon: 28.6 LPA (min CGPA 6.4, bond 2yr)
+3. IBM: 27.5 LPA (min CGPA 7.5, bond 0yr)
+4. Wipro: 26.1 LPA (min CGPA 6.7, bond 1yr)
+5. Microsoft: 21.4 LPA (min CGPA 6.1, bond 0yr)
+6. Samsun",1.0,True,0.124,0,304,2.56,1.0,True
+MH2,Multi-hop,Hop-2: Tech Focus + Package,Which company that uses Python in interviews offers the highest package?,"To answer this question, I will follow the AGGREGATION rules.
+
+**Step 1: Scan all relevant chunks for companies that use Python in interviews**
+
+From the provided context, the companies that use Python in interviews are:
+
+- Flipkart (Chunk 1)
+- Intel (Chunk 2)
+- Oracle (Chunk 3)
+- Google (Chunk 4)
+
+",1.0,True,0.472,0,364,11.67,1.0,False
+MH3,Multi-hop,Hop-3: Eligibility + Hiring + Package,A student with CGPA 8.0 and 0 backlogs wants a company that hires many Analysts and pays above 20 LPA.,"Eligible companies for CGPA 8.0, 0 backlogs (ranked by package):
+1. Infosys: 42.9 LPA (min CGPA 8.0, bond 0yr)
+2. Google: 42.0 LPA (min CGPA 7.4, bond 1yr)
+3. Intel: 41.4 LPA (min CGPA 7.0, bond 0yr)
+4. Qualcomm: 41.3 LPA (min CGPA 7.2, bond 1yr)
+5. Capgemini: 38.3 LPA (min CGPA 7.1, bond 2yr)
+6. Am",1.0,True,0.173,0,414,9.52,1.0,True
+MH4,Multi-hop,Hop-2: Bond + Package,Which zero-bond companies offer more than 40 LPA?,"To find the zero-bond companies offering more than 40 LPA, I will follow these steps:
+
+Step 1: Filter by zero-bond condition
+- Intel: Bond-free: Yes
+- Qualcomm: Bond-free: No
+- IBM: Bond-free: Yes
+- SAP: Bond-free: No
+- Accenture: Bond-free: No
+
+Companies that are zero-bond: Intel, IBM
+
+Step 2: Filt",0.5,True,0.321,0,380,10.09,1.0,False

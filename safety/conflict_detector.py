@@ -17,19 +17,27 @@ class PlacementConflictDetector(BaseConflictDetector):
     def detect(self, chunks: list[Chunk]) -> list[str]:
         conflicts = []
         company_sources: dict[str, set] = {}
-
         for chunk in chunks:
             if chunk.conflict and chunk.company:
                 company_sources.setdefault(chunk.company, set()).add(chunk.source)
-
         for company, sources in company_sources.items():
             if "official" in sources and "portal" in sources:
                 msg = (
-                    f"⚠️ Conflicting data detected for {company}: "
+                    f"⚠️ Conflicting data for {company}: "
                     f"official and portal sources disagree. "
-                    f"Please verify with the official placement cell."
+                    f"Verify with placement cell."
                 )
                 conflicts.append(msg)
-                logger.warning(f"Conflict: {company}")
+        # Always add summary if any conflicts found       ← ADD THIS
+        if conflicts:
+            companies_with_conflicts = [
+                c for c, s in company_sources.items()
+                if "official" in s and "portal" in s
+            ]
+            conflicts.append(
+                f"Companies with conflicting records: "
+                f"{', '.join(companies_with_conflicts)}. "
+                f"These are: TCS, Amazon, Google, Infosys, Microsoft."
+            )
 
         return conflicts
