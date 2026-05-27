@@ -180,5 +180,47 @@
         "response_time": 2.02
       }
     ]
+  },
+  {
+    "id": "82ffe70c-df04-47ca-bf22-1defc542de2d",
+    "title": "Which company has best package to CGPA ratio?",
+    "messages": [
+      {
+        "query": "Which company has best package to CGPA ratio?",
+        "answer": "Top 5 package-to-CGPA ratio:\n1. Intel: 5.914 LPA/CGPA\n2. Qualcomm: 5.736 LPA/CGPA\n3. Google: 5.676 LPA/CGPA\n4. Capgemini: 5.394 LPA/CGPA\n5. Infosys: 5.362 LPA/CGPA\n\nAdditional context from placement documents:\nTo answer this question, I will follow the AGGREGATION rules.\n\n**Step 1: Scan all relevant chunks for package and CGPA values**\n\n| Company | Package (LPA) | CGPA |\n| --- | --- | --- |\n| IBM | 27.5 | 7.5 |\n| Accenture | 17.3 | 8.2 |\n| Qualcomm | 41.3 | 7.2 |\n| Deloitte | 9.6 | 7.7 |\n| Intel | 41.4 | 7.0 |\n\n**Step 2: Calculate the package to CGPA ratio for each company**\n\nTo calculate the ratio, I will divide the package by the CGPA.\n\n| Company | Package (LPA) | CGPA | Ratio |\n| --- | --- | --- | --- |\n| IBM | 27.5 | 7.5 | 3.67 |\n| Accenture | 17.3 | 8.2 | 2.11 |\n| Qualcomm | 41.3 | 7.2 | 5.74 |\n| Deloitte | 9.6 | 7.7 | 1.25 |\n| Intel | 41.4 | 7.0 | 5.91 |\n\n**Step 3: Compare the ratios to find the maximum**\n\nBased on the comparison table, the company with the highest package to CGPA ratio is:\n\n**Intel with a ratio of 5.91**\n\nHowever, I also need to compare it with Qualcomm's ratio of 5.74. Since 5.91 is greater than 5.74, Intel has the best package to CGPA ratio.\n\n**Final Answer:** Intel has the best package to CGPA ratio.",
+        "sources": [
+          "tool:calculator",
+          "ELIGIBILITY | IBM",
+          "ELIGIBILITY | Accenture",
+          "ELIGIBILITY | Qualcomm",
+          "ELIGIBILITY | Deloitte",
+          "ELIGIBILITY | Intel"
+        ],
+        "conflicts_detected": [],
+        "fallback_triggered": false,
+        "retrieval_quality": 0.5301080703735351,
+        "context_tokens": 397,
+        "self_consistency_score": 1.0,
+        "response_time": 14.69
+      },
+      {
+        "query": "Which company has best package to CGPA ratio?",
+        "answer": "Top 5 package-to-CGPA ratio:\n1. Intel: 5.914 LPA/CGPA\n2. Qualcomm: 5.736 LPA/CGPA\n3. Google: 5.676 LPA/CGPA\n4. Capgemini: 5.394 LPA/CGPA\n5. Infosys: 5.362 LPA/CGPA\n\nAdditional context from placement documents:\nTo answer this question, I will follow the AGGREGATION rules.\n\n**Step 1: Scan all relevant chunks for package and CGPA values**\n\n| Company | Package (LPA) | CGPA |\n| --- | --- | --- |\n| IBM | 27.5 | 7.5 |\n| Accenture | 17.3 | 8.2 |\n| Qualcomm | 41.3 | 7.2 |\n| Deloitte | 9.6 | 7.7 |\n| Intel | 41.4 | 7.0 |\n\n**Step 2: Calculate the package to CGPA ratio for each company**\n\nTo calculate the ratio, I will divide the package by the CGPA.\n\n| Company | Package (LPA) | CGPA | Ratio |\n| --- | --- | --- | --- |\n| IBM | 27.5 | 7.5 | 3.67 |\n| Accenture | 17.3 | 8.2 | 2.11 |\n| Qualcomm | 41.3 | 7.2 | 5.74 |\n| Deloitte | 9.6 | 7.7 | 1.25 |\n| Intel | 41.4 | 7.0 | 5.91 |\n\n**Step 3: Compare the ratios to find the maximum**\n\nBased on the comparison table, the company with the highest package to CGPA ratio is:\n\n**Intel with a ratio of 5.91**\n\nHowever, I also need to compare it with Qualcomm's ratio of 5.74. Since 5.91 is greater than 5.74, Intel has the best package to CGPA ratio.\n\n**Final Answer:** Intel has the best package to CGPA ratio.",
+        "sources": [
+          "tool:calculator",
+          "ELIGIBILITY | IBM",
+          "ELIGIBILITY | Accenture",
+          "ELIGIBILITY | Qualcomm",
+          "ELIGIBILITY | Deloitte",
+          "ELIGIBILITY | Intel"
+        ],
+        "conflicts_detected": [],
+        "fallback_triggered": false,
+        "retrieval_quality": 0.5301080703735351,
+        "context_tokens": 397,
+        "self_consistency_score": 1.0,
+        "response_time": 0.01
+      }
+    ]
   }
 ]
